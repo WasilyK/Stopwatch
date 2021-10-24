@@ -1,71 +1,90 @@
 package com.gb.stopwatch
 
+import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
-import com.gb.stopwatch.model.*
-import com.gb.stopwatch.viewmodel.OrchestratorFactory
+import com.gb.stopwatch.utils.viewById
 import com.gb.stopwatch.viewmodel.StopwatchListOrchestrator
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var stopwatchListOrchestrator: StopwatchListOrchestrator
+    private val stopwatchListOrchestrator: StopwatchListOrchestrator by viewModel()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private val orchestratorFactory = OrchestratorFactory(
-        StopwatchStateHolderFactory.create(),
-        StopwatchStateHolderFactory.create()
-    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        stopwatchListOrchestrator = ViewModelProvider(this, orchestratorFactory)
-            .get(StopwatchListOrchestrator::class.java)
-
         initViewStopwatch()
-        initViewStopwatch_2()
+        initViewStopwatch2()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem) =
+        when(item.itemId) {
+            R.id.about_menu -> {
+                startActivity(Intent(this, AboutActivity::class.java))
+                true
+            }
+            else -> {
+                super.onOptionsItemSelected(item)
+            }
+        }
+
     private fun initViewStopwatch() {
-        val textView = findViewById<TextView>(R.id.text_time)
+        val textView by viewById<TextView>(R.id.text_time)
         scope.launch {
             stopwatchListOrchestrator.ticker.collect {
                 textView.text = it
             }
         }
 
-        findViewById<Button>(R.id.button_start).setOnClickListener {
+        val btnStart by viewById<Button>(R.id.button_start)
+        val btnPause by viewById<Button>(R.id.button_pause)
+        val btnStop by viewById<Button>(R.id.button_stop)
+
+        btnStart.setOnClickListener {
             stopwatchListOrchestrator.control.start()
         }
-        findViewById<Button>(R.id.button_pause).setOnClickListener {
+        btnPause.setOnClickListener {
             stopwatchListOrchestrator.control.pause()
         }
-        findViewById<Button>(R.id.button_stop).setOnClickListener {
+        btnStop.setOnClickListener {
             stopwatchListOrchestrator.control.stop()
         }
     }
 
-    private fun initViewStopwatch_2() {
-        val textView_2 = findViewById<TextView>(R.id.text_time_2)
+    private fun initViewStopwatch2() {
+        val textView by viewById<TextView>(R.id.text_time_2)
         scope.launch {
-            stopwatchListOrchestrator.ticker_2.collect {
-                textView_2.text = it
+            stopwatchListOrchestrator.ticker2.collect {
+                textView.text = it
             }
         }
 
-        findViewById<Button>(R.id.button_start_2).setOnClickListener {
-            stopwatchListOrchestrator.control_2.start()
+        val btnStart by viewById<Button>(R.id.button_start_2)
+        val btnPause by viewById<Button>(R.id.button_pause_2)
+        val btnStop by viewById<Button>(R.id.button_stop_2)
+
+        btnStart.setOnClickListener {
+            stopwatchListOrchestrator.control2.start()
         }
-        findViewById<Button>(R.id.button_pause_2).setOnClickListener {
-            stopwatchListOrchestrator.control_2.pause()
+        btnPause.setOnClickListener {
+            stopwatchListOrchestrator.control2.pause()
         }
-        findViewById<Button>(R.id.button_stop_2).setOnClickListener {
-            stopwatchListOrchestrator.control_2.stop()
+        btnStop.setOnClickListener {
+            stopwatchListOrchestrator.control2.stop()
         }
     }
 
